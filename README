@@ -1,0 +1,28 @@
+Install:
+
+pip install cs
+git clone https://github.com/AlexanderStock/cloudstack_nagios.git
+mkdir cache
+
+--> edit configfile with cloudstack credentials
+
+Checks:
+
+capacity                    : Global Capacity
+virtualrouter               : Global Status of Virtual Routers
+systemvm                    : Global Status of System VMs
+hoststatus                  : Status of Hosts per Cluster
+vmplacement (experimental)  : Check if vms can be migrated to get more continuous space
+projects                    : Check if Projects have reached their thresholds for resources
+domains                     : Check if Domains have reached their thresholds for resources
+offerings                   : Check per cluster if their are offerings which can not be deployed anymore.
+
+Options:
+
+-f <configfile>    : path of the config file
+-m <mode>          : check which should be executed
+-c                 : use cache. If Output stays the same the check goes back to OK State
+-d <domainid>      : Just check specific domain in Domaincheck 
+-p <projectid>     : Just check specific project in Projectcheck
+
+python cloudstack-resources.py  -m  <MODE> -f <configfile>

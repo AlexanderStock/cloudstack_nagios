@@ -1,0 +1,12 @@
+{
+  "thresholds": {
+    "XXL": {
+      "warn": "50",
+      "critical": "90"
+    },
+    "XXXL": {
+      "warn": "50",
+      "critical": "90"
+    }
+  }
+}
