@@ -1,0 +1,12 @@
+{
+  "thresholds": {
+    "CAPACITY_TYPE_MEMORY": {
+      "warn": "50",
+      "critical": "80"
+    },
+    "CAPACITY_TYPE_CPU": {
+      "warn": "30",
+      "critical": "80"
+    }
+  }
+}

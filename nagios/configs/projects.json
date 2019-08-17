@@ -1,0 +1,16 @@
+{
+   "thresholds": {
+      "dom1-proj1": {
+         "cpu": {
+            "warn": "10",
+            "critical": "90"
+         }
+      }
+   },
+   "global":{
+      "cpu": {
+         "warn": "10",
+         "critical": "50"
+         }
+   }
+}

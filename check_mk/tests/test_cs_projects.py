@@ -1,0 +1,9 @@
+#!/usr/bin/python
+# by Alexander Stock
+from check_mk.checks.mk_cs_projects import inventory_cloudstack_projects,check_cloudstack_projects
+from nagios.lib import csresources
+import json
+
+csr = csresources()
+print inventory_cloudstack_projects(json.dumps(csr.list_projects()))
+print check_cloudstack_projects("ROOT/p1",{},json.dumps(csr.list_projects()))
