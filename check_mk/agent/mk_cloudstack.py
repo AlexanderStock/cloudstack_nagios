@@ -3,7 +3,7 @@
 from nagios.lib import csresources
 import json
 
-myResult = "<<<check_mk>>>\n"
+myResult = ""
 csr = csresources()
 
 #Get Capacity
@@ -45,4 +45,7 @@ myResult += "]\n"
 myResult += "<offerings>\n"
 myResult +=json.dumps(csr.list_offerings())
 
+#Remove all whitespace
+myResult.replace(" ", "")
+#Return string
 print myResult

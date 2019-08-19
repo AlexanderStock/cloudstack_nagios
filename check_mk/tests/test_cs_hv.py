@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # by Alexander Stock
-from check_mk.checks.mk_cs_hvstatus import inventory_cloudstack_hvstatus,check_cloudstack_hvstatus
+from check_mk.checks.check_cloudstack_hvstatus import inventory_cloudstack_hvstatus,check_cloudstack_hvstatus
 from nagios.lib import csresources
 import json
 

@@ -14,26 +14,28 @@ cs_types = {
 }
 
 def inventory_cloudstack_capacity(info):
-    data=json.loads(info)
+    data=json.loads(str(info[0][0]))
     for line in data:
         if line['type'] in cs_types:
-            yield cs_types[line['type']]
+            yield cs_types[line['type']], None
 
 
 def check_cloudstack_capacity(item, params, info):
     thresholds={}
-    data = json.loads(info)
+    data = json.loads(str(info[0][0]))
     for metric in data:
-        if cs_types[metric['type']] == item:
-            if cs_types[metric['type']] in params:
-                thresholds = params[cs_types[metric['type']]]
-            return check_capacity(resource=metric,thresholds=thresholds)
+        if metric['type'] in cs_types:
+            if cs_types[metric['type']] == item:
+                if params is not None:
+                    if cs_types[metric['type']] in params:
+                        thresholds = params[cs_types[metric['type']]]
+                return check_capacity(resource=metric,thresholds=thresholds)
 
 
 check_info["check_cloudstack_capacity"] = {
     'check_function':            check_cloudstack_capacity,
     'inventory_function':        inventory_cloudstack_capacity,
-    'service_description':       'Capacity for %s',
+    'service_description':       'CloudStack Capacity for %s',
     'has_perfdata':              True,
     'group':                     'check_cloudstack_capacity',
     'includes':                  ['cschecks.include'],

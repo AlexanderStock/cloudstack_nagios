@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # by Alexander Stock
-from check_mk.checks.mk_cs_systemvm import inventory_cloudstack_systemvm,check_cloudstack_systemvm
+from check_mk.checks.check_cloudstack_systemvm import inventory_cloudstack_systemvm,check_cloudstack_systemvm
 from nagios.lib import csresources
 import json
 
