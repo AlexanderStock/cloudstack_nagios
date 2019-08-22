@@ -26,6 +26,7 @@ def check_capacity(resource=None,thresholds={}):
     name=types[resource['type']]
     warn = 0
     critical = 0
+
     if 'warn' in thresholds and 'critical' in thresholds:
         warn=thresholds['warn']
         critical=thresholds['critical']
@@ -159,15 +160,17 @@ def check_projects(resource=None,thresholds={}):
             and project[value+'total'] != "Unlimited":
                 percentvalue = (int(project[value+'total'])/int(project[value+'limit']))*100
                 identifier=project['domain']+"-"+project['name']
-                if identifier in thresholds:
-                    if value in thresholds[project['name']]:
-                        warn = thresholds[project['name']][value]['warn']
-                        crit = thresholds[project['name']][value]['critical']
-                    else:
-                        if "global" in thresholds:
-                            if value in thresholds['global']:
-                                warn = thresholds['global'][value]['warn']
-                                crit = thresholds['global'][value]['critical']
+                if 'custom' in thresholds:
+                    myItem = search_item(thresholds['custom'], identifier, "name")
+                    if myItem is not None:
+                        if value in myItem:
+                            warn=myItem[value]['warn']
+                            crit=myItem[value]['critical']
+                if warn is None and crit is None:
+                    if "global" in thresholds:
+                        if value in thresholds['global'] and identifier != "Unlimited":
+                            warn=thresholds['global'][value]['warn']
+                            crit=thresholds['global'][value]['critical']
 
                 if warn != None and crit != None:
                     if int(warn) < percentvalue and int(crit) > percentvalue:
@@ -217,11 +220,12 @@ def check_domains(resource=None,thresholds={}):
             and domain[value+'limit'] != "0" \
             and domain[value+'total'] != "Unlimited":
                 percentvalue = (int(domain[value+'total'])/int(domain[value+'limit']))*100
-                if 'domains' in thresholds:
-                    if domain['name'] in thresholds['domains']:
-                        if value in thresholds['domains'][domain['name']]:
-                            warn=thresholds['domains'][domain['name']][value]['warn']
-                            crit=thresholds['domains'][domain['name']][value]['critical']
+                if 'custom' in thresholds:
+                    myItem = search_item(thresholds['custom'], domain['name'], "name")
+                    if myItem is not None:
+                        if value in myItem:
+                            warn=myItem[value]['warn']
+                            crit=myItem[value]['critical']
                 if warn is None and crit is None:
                     if "global" in thresholds:
                         if value in thresholds['global'] and domain[value] != "Unlimited":
@@ -342,7 +346,11 @@ def check_offerings(resource=None,thresholds={}):
 ##############                          Helper Functions                                  ##############
 ########################################################################################################
 
-#def search_item(array,item):
+def search_item(array, item, searchfield):
+    for myItem in array:
+        if myItem[searchfield] == item:
+            return myItem
+    return None
 
 
 def sort_objects(array,cpuvalue,memvalue):
