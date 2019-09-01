@@ -14,7 +14,6 @@ def inventory_cloudstack_offerings(info):
 
 
 def check_cloudstack_offerings(item, params, info):
-    thresholds = {}
     myOffering = []
     myCluster = []
     foundOffering = False
@@ -34,29 +33,16 @@ def check_cloudstack_offerings(item, params, info):
         if foundOffering == True:
             for offering in json.loads(line[0]):
                 if item == offering["name"]:
-                    if params is not None:
-                        if offering["name"] in params:
-                            thresholds = params[offering["name"]]
                     myOffering = offering
         if foundCluster == True:
-            #for cluster in line[0]:
-            #    print cluster[0]
-                #cluster[0] = cluster[0].encode("utf-8")
-            del line[0][2]
             myCluster = json.loads(line[0])
 
     metric=[[myOffering],myCluster]
-    return check_offerings(resource=metric,thresholds=thresholds)
-
-def unicode_to_string(info):
-   for line in info:
-       line[0] = line[0].encode("utf-8")
-   return info
+    return check_offerings(resource=metric,thresholds=params)
 
 check_info["check_cloudstack_offerings"] = {
     'check_function':            check_cloudstack_offerings,
     'inventory_function':        inventory_cloudstack_offerings,
-    'parse_function':            unicode_to_string,
     'service_description':       'CloudStack Count for offering %s',
     'has_perfdata':              True,
     'group':                    'check_cloudstack_offerings',

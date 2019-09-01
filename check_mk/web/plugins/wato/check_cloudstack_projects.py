@@ -133,7 +133,7 @@ register_check_parameters(
                     elements = [
                         ("name",
                          TextAscii(
-                             title=_("Name of domain"),
+                             title=_("Name of project"),
                              help=_("Add the name of the project"),
                          ),
                          ),
@@ -257,6 +257,6 @@ register_check_parameters(
             ],
             optional_keys = False,
         ),
-    None,
+    TextAscii( title = _("Status Description"), allow_empty = True),
     "dict",
 )

@@ -257,6 +257,6 @@ register_check_parameters(
             ],
             optional_keys = False,
         ),
-    None,
+    TextAscii( title = _("Status Description"), allow_empty = True),
     "dict",
 )

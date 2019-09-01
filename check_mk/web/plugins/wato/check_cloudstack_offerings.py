@@ -6,7 +6,7 @@ subgroup_applications = _("Cloud Platforms")
 register_check_parameters(
     subgroup_applications,
     "check_cloudstack_offerings",
-    _("Cloudstack offering Resources"),
+    _("Cloudstack Offering Resources"),
      ListOf(
         Dictionary(
             elements = [
@@ -32,6 +32,6 @@ register_check_parameters(
         title=_("Offering settings"),
         add_label=_("Add offering"),
     ),
-    None,
+    TextAscii( title = _("Status Description"), allow_empty = True),
     "dict",
 )
