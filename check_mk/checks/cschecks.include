@@ -23,28 +23,29 @@ def check_capacity(resource=None,thresholds={}):
     message = "See long output: \n"
     exitcode = 0
     performancedata = []
-    name=types[resource['type']]
     warn = 0
     critical = 0
 
-    if 'warn' in thresholds and 'critical' in thresholds:
-        warn=thresholds['warn']
-        critical=thresholds['critical']
-        if resource['percentused'] > warn and resource['percentused'] < critical:
-            message=message + "WARN:     {:40} has reached warning value. Threshold:{}% Value:{}%\n".format(name,warn,resource['percentused'])
-            if exitcode < 1:
-                exitcode=1
-        elif resource['percentused'] > critical:
-            message=message + "Critical: {:40} has reached warning value. Threshold:{}% Value:{}%\n".format(name,critical,resource['percentused'])
-            if exitcode < 2:
-                exitcode=2
+    for myType in resource:
+        name = types[myType['type']]
+        if name in thresholds:
+            warn=thresholds[name][0]
+            critical=thresholds[name][1]
+            if float(myType['percentused']) >= warn and float(myType['percentused']) <= critical:
+                message=message + "WARN:     {:40} has reached warning value. Threshold:{}% Value:{}%\n".format(name,warn,myType['percentused'])
+                if exitcode < 1:
+                    exitcode=1
+            elif float(myType['percentused']) >= critical:
+                message=message + "Critical: {:40} has reached warning value. Threshold:{}% Value:{}%\n".format(name,critical,myType['percentused'])
+                if exitcode < 2:
+                    exitcode=2
+            else:
+                message = message + "OK:       {:40} is in status ok. Value:{}% \n".format(name,myType['percentused'])
         else:
-            message = message + "OK:       {:40} is in status ok. Value:{}% \n".format(name,resource['percentused'])
-    else:
-        message = message + "OK:       {:40} No Thresholds given. Value:{}%\n".format(name,resource['percentused'])
+            message = message + "OK:       {:40} No Thresholds given. Value:{}%\n".format(name,myType['percentused'])
 
         # Add Performance data
-        performancedata.append((name, resource['percentused'] + "%", warn, critical, ''))
+        performancedata.append((name, myType['percentused'] + "%", warn, critical, ''))
 
     #message += "</pre>\n"
     return exitcode,message,performancedata
@@ -164,19 +165,19 @@ def check_projects(resource=None,thresholds={}):
                     myItem = search_item(thresholds['custom'], identifier, "name")
                     if myItem is not None:
                         if value in myItem:
-                            warn=myItem[value]['warn']
-                            crit=myItem[value]['critical']
+                            warn=myItem[value][0]
+                            crit=myItem[value][1]
                 if warn is None and crit is None:
                     if "global" in thresholds:
                         if value in thresholds['global'] and identifier != "Unlimited":
-                            warn=thresholds['global'][value]['warn']
-                            crit=thresholds['global'][value]['critical']
+                            warn=thresholds['global'][value][0]
+                            crit=thresholds['global'][value][1]
 
                 if warn != None and crit != None:
-                    if int(warn) < percentvalue and int(crit) > percentvalue:
+                    if float(warn) <= percentvalue and float(crit) >= percentvalue:
                         message += "\n--> Warning: Project " + str(project['name']) + " has reached threshold for " + value + ": " + str(percentvalue)
                         exitcode = 1
-                    elif int(crit) < percentvalue:
+                    elif float(crit) <= percentvalue:
                         message += "\n--> Critical: Project " + str(project['name']) + " has reached threshold for " + value + ": " + str(percentvalue)
                         exitcode = 2
 
@@ -216,6 +217,7 @@ def check_domains(resource=None,thresholds={}):
         for value in  values:
             warn=None
             crit=None
+            print value
             if domain[value+'limit'] != "Unlimited" \
             and domain[value+'limit'] != "0" \
             and domain[value+'total'] != "Unlimited":
@@ -224,20 +226,19 @@ def check_domains(resource=None,thresholds={}):
                     myItem = search_item(thresholds['custom'], domain['name'], "name")
                     if myItem is not None:
                         if value in myItem:
-                            warn=myItem[value]['warn']
-                            crit=myItem[value]['critical']
+                            warn=myItem[value][0]
+                            crit=myItem[value][1]
                 if warn is None and crit is None:
                     if "global" in thresholds:
                         if value in thresholds['global'] and domain[value] != "Unlimited":
-                            warn=thresholds['global'][value]['warn']
-                            crit=thresholds['global'][value]['critical']
-
+                            warn=thresholds['global'][value][0]
+                            crit=thresholds['global'][value][1]
                 if warn != None and crit != None:
                     if int(warn) > percentvalue and int(crit) < percentvalue:
                         message +="\n--> Warning: Domain " + str(domain['name']) + " has reached threshold for " + value + ": " + str(percentvalue)
                         exitcode = 1
                     elif int(crit) > percentvalue:
-                        message+="\n--> Critical: Domain " + str(domain['name']) +" has reached threshold for " + value + ": " + str(percentvalue)
+                        message+="\n--> Critical: Domain " + str(domain['name']) + " has reached threshold for " + value + ": " + str(percentvalue)
                         exitcode = 2
                 performancedata.append((domain['name'] + "-usage" + ":" + value, percentvalue, '', '', ''))
                 performancedata.append((domain['name'] + "-total" + ":" + value, domain[value + 'total'], '', '', ''))
@@ -320,7 +321,6 @@ def check_offerings(resource=None,thresholds=[]):
         for offering in sorted(offeringdict.keys()):
             myItem = search_item(thresholds, offering, "name")
             if myItem is not None:
-                print myItem
                 warn = myItem['count'][0]
                 critical = myItem['count'][1]
                 if offeringdict[offering] <= warn and offeringdict[offering] >= critical:

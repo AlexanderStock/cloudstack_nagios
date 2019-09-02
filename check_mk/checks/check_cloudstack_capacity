@@ -26,11 +26,7 @@ def check_cloudstack_capacity(item, params, info):
     for metric in data:
         if metric['type'] in cs_types:
             if cs_types[metric['type']] == item:
-                if params is not None:
-                    print params
-                    if cs_types[metric['type']] in params:
-                        thresholds = params[cs_types[metric['type']]]
-                return check_capacity(resource=metric,thresholds=thresholds)
+                return check_capacity(resource=[metric],thresholds=params)
 
 
 check_info["check_cloudstack_capacity"] = {

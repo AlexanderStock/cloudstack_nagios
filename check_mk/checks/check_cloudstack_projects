@@ -11,10 +11,7 @@ def check_cloudstack_projects(item, params, info):
     for metric in data:
         domainpath = metric['domain']+"/"+metric['name']
         if domainpath == item:
-            if params is not None:
-                if domainpath in params:
-                    thresholds = params[domainpath]
-            return check_projects(resource=[metric],thresholds=thresholds)
+            return check_projects(resource=[metric],thresholds=params)
 
 
 check_info["check_cloudstack_projects"] = {

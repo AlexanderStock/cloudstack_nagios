@@ -10,12 +10,7 @@ def check_cloudstack_domains(item, params, info):
     thresholds={}
     for metric in data:
         if metric['name'] == item:
-            if params is not None:
-                if metric['name'] in params:
-                    thresholds = params[metric['name']]
-                    if thresholds == {}:
-                        thresholds = {'domains':{}}
-            return check_domains(resource=[metric],thresholds=thresholds)
+            return check_domains(resource=[metric],thresholds=params)
 
 
 check_info["check_cloudstack_domains"] = {
