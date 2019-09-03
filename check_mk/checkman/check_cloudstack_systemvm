@@ -1,0 +1,12 @@
+title: Cloudstack systemvm
+agents: linux
+catalog: cloud/cloudstack
+distribution: https://github.com/AlexanderStock/cloudstack_nagios
+author: Alexander Stock <mail@stock-alexander.de>
+license: GPL
+description:
+    This check is for monitoring the status of systemvms connected to cloudstack.
+    This means you will see the alert state of a systemvm and also if a systemvm disconnects unplanned.
+
+inventory:
+

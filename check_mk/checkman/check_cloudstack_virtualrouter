@@ -1,0 +1,13 @@
+title: Cloudstack virtualrouters
+agents: linux
+catalog: cloud/cloudstack
+distribution: https://github.com/AlexanderStock/cloudstack_nagios
+author: Alexander Stock <mail@stock-alexander.de>
+license: GPL
+description:
+    This check is for monitoring the status of virtualrouters connected to cloudstack.
+    This means you will see the alert state of a virtualrouters and also if a virtualrouters disconnects unplanned.
+    Also the updatestatus and the HA status of redundant VPC setups will be checked.
+
+inventory:
+

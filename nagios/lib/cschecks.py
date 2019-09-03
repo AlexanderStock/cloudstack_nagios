@@ -20,37 +20,39 @@ def check_capacity(resource=None,thresholds={}):
         8: 'CAPACITY_TYPE_DIRECT_ATTACHED_PUBLIC_IP',
         19: 'CAPACITY_TYPE_LOCAL_STORAGE',
     }
-    message="See long output: \n<pre>\n"
-    exitcode=0
-    performancedata=[]
-    name=types[resource['type']]
+    message = "See long output: \n"
+    exitcode = 0
+    performancedata = []
     warn = 0
     critical = 0
-    if 'warn' in thresholds and 'critical' in thresholds:
-        warn=thresholds['warn']
-        critical=thresholds['critical']
-        if resource['percentused'] > warn and resource['percentused'] < critical:
-            message=message + "WARN:     {:40} has reached warning value. Threshold:{}% Value:{}%\n".format(name,warn,resource['percentused'])
-            if exitcode < 1:
-                exitcode=1
-        elif resource['percentused'] > critical:
-            message=message + "Critical: {:40} has reached warning value. Threshold:{}% Value:{}%\n".format(name,critical,resource['percentused'])
-            if exitcode < 2:
-                exitcode=2
+
+    for myType in resource:
+        name = types[myType['type']]
+        if name in thresholds:
+            warn=thresholds[name][0]
+            critical=thresholds[name][1]
+            if float(myType['percentused']) >= warn and float(myType['percentused']) <= critical:
+                message=message + "WARN:     {:40} has reached warning value. Threshold:{}% Value:{}%\n".format(name,warn,myType['percentused'])
+                if exitcode < 1:
+                    exitcode=1
+            elif float(myType['percentused']) >= critical:
+                message=message + "Critical: {:40} has reached warning value. Threshold:{}% Value:{}%\n".format(name,critical,myType['percentused'])
+                if exitcode < 2:
+                    exitcode=2
+            else:
+                message = message + "OK:       {:40} is in status ok. Value:{}% \n".format(name,myType['percentused'])
         else:
-            message = message + "OK:       {:40} is in status ok. Value:{}% \n".format(name,resource['percentused'])
-    else:
-        message = message + "OK:       {:40} No Thresholds given. Value:{}%\n".format(name,resource['percentused'])
+            message = message + "OK:       {:40} No Thresholds given. Value:{}%\n".format(name,myType['percentused'])
 
         # Add Performance data
-        performancedata.append((name, resource['percentused'] + "%", warn, critical, ''))
+        performancedata.append((name, myType['percentused'] + "%", warn, critical, ''))
 
-    message += "</pre>\n"
+    #message += "</pre>\n"
     return exitcode,message,performancedata
 
 def check_virtualrouter(resource=None,thresholds={}):
 
-    message="See long output: \n<pre>Name       Status   Running    Upgrade\n"
+    message="See long output: \nName       Status   Running    Upgrade\n"
     vpcmessage="Status of redundant VPC Routers\nName    Status        Status\n"
     exitcode=0
     performancedata=[]
@@ -59,7 +61,7 @@ def check_virtualrouter(resource=None,thresholds={}):
     updaterouters=0
 
     for router in resource:
-        name=router['name']
+        name = router['name']
         status="OK"
         running="yes"
         upgrade="no"
@@ -78,10 +80,11 @@ def check_virtualrouter(resource=None,thresholds={}):
                 exitcode = 2
 
         if router['isredundantrouter']:
-            vpc=router['vpcname']
-            if router['vpcname'] not in vpcdict:
-                vpcdict[router['vpcname']]={}
-            vpcdict[vpc][name] = router['redundantstate']
+            if 'vpcname' in router:
+                vpc=router['vpcname']
+                if router['vpcname'] not in vpcdict:
+                    vpcdict[router['vpcname']]={}
+                vpcdict[vpc][name] = router['redundantstate']
 
         message="{:10}{:10}{:10}{:10}{:10}\n".format(message,name,status,running,upgrade)
 
@@ -105,12 +108,12 @@ def check_virtualrouter(resource=None,thresholds={}):
     performancedata.append(("Needs_Update", updaterouters,'','','' ))
     performancedata.append(("Not_running", shutdownrouters, '', '', ''))
 
-    message += "</pre>\n"
+    #message += "</pre>\n"
     return exitcode,message,performancedata
 
 def check_systemvm(resource=None,thresholds={}):
 
-    message="See long output: \n<pre>"
+    message="See long output: \n"
     exitcode=0
     shutdownvms=0
     performancedata=[]
@@ -127,12 +130,12 @@ def check_systemvm(resource=None,thresholds={}):
     #Add Performance data
     performancedata.append(("Not_running", shutdownvms, '', '', ''))
 
-    message += "</pre>\n"
+    #message += "</pre>\n"
     return exitcode,message,performancedata
 
 def check_projects(resource=None,thresholds={}):
 
-    message="See long output: \n<pre>"
+    message="See long output: \n"
     exitcode=0
     performancedata=[]
     values=[
@@ -158,40 +161,42 @@ def check_projects(resource=None,thresholds={}):
             and project[value+'total'] != "Unlimited":
                 percentvalue = (int(project[value+'total'])/int(project[value+'limit']))*100
                 identifier=project['domain']+"-"+project['name']
-                if identifier in thresholds:
-                    if value in thresholds[project['name']]:
-                        warn = thresholds[project['name']][value]['warn']
-                        crit = thresholds[project['name']][value]['critical']
-                    else:
-                        if "global" in thresholds:
-                            if value in thresholds['global']:
-                                warn = thresholds['global'][value]['warn']
-                                crit = thresholds['global'][value]['critical']
+                if 'custom' in thresholds:
+                    myItem = search_item(thresholds['custom'], identifier, "name")
+                    if myItem is not None:
+                        if value in myItem:
+                            warn=myItem[value][0]
+                            crit=myItem[value][1]
+                if warn is None and crit is None:
+                    if "global" in thresholds:
+                        if value in thresholds['global'] and identifier != "Unlimited":
+                            warn=thresholds['global'][value][0]
+                            crit=thresholds['global'][value][1]
 
                 if warn != None and crit != None:
-                    if int(warn) < percentvalue and int(crit) > percentvalue:
+                    if float(warn) <= percentvalue and float(crit) >= percentvalue:
                         message += "\n--> Warning: Project " + str(project['name']) + " has reached threshold for " + value + ": " + str(percentvalue)
                         exitcode = 1
-                    elif int(crit) < percentvalue:
+                    elif float(crit) <= percentvalue:
                         message += "\n--> Critical: Project " + str(project['name']) + " has reached threshold for " + value + ": " + str(percentvalue)
                         exitcode = 2
 
-                performancedata.append((project['domain']+"+"+project['name']+"+usage" + "!" + value, percentvalue, '', '', ''))
-                performancedata.append((project['domain'] + "+" + project['name'] + "+total" + "!" + value,project[value+'total'], '', '', ''))
+                performancedata.append((project['domain']+ "-" +project['name']+"-usage" + ":" + value, percentvalue, '', '', ''))
+                performancedata.append((project['domain'] + "-" + project['name'] + "-total" + ":" + value,project[value+'total'], '', '', ''))
             else:
                 if project[value+'total'] != "Unlimited":
-                    performancedata.append((project['domain'] + "+" + project['name'] + "+total" + "!" + value,project[value + 'total'], '', '', ''))
+                    performancedata.append((project['domain'] + "-" + project['name'] + "-total" + ":" + value,project[value + 'total'], '', '', ''))
                 else:
-                    performancedata.append((project['domain'] + "+" + project['name'] + "+total" + "!" + value,-1, '', '', ''))
+                    performancedata.append((project['domain'] + "-" + project['name'] + "-total" + ":" + value,-1, '', '', ''))
 
-                performancedata.append((project['domain'] +"+" + project['name'] + "+usage" + "!" + value, -1, '', '', ''))
+                performancedata.append((project['domain'] + "-" + project['name'] + "-usage" + ":" + value, -1, '', '', ''))
 
-    message += "</pre>\n"
+    #message += "</pre>\n"
     return exitcode,message,performancedata
 
 def check_domains(resource=None,thresholds={}):
 
-    message="See long output: \n<pre>"
+    message="See long output: \n"
     exitcode=0
     performancedata=[]
     values=[
@@ -212,42 +217,44 @@ def check_domains(resource=None,thresholds={}):
         for value in  values:
             warn=None
             crit=None
+            print value
             if domain[value+'limit'] != "Unlimited" \
             and domain[value+'limit'] != "0" \
             and domain[value+'total'] != "Unlimited":
                 percentvalue = (int(domain[value+'total'])/int(domain[value+'limit']))*100
-                if domain['name'] in thresholds['domains']:
-                    if value in thresholds['domains'][domain['name']]:
-                        warn=thresholds['domains'][domain['name']][value]['warn']
-                        crit=thresholds['domains'][domain['name']][value]['critical']
-                    else:
-                        if "global" in thresholds:
-                            if value in thresholds['global'] and domain[value] != "Unlimited":
-                                warn=thresholds['global'][value]['warn']
-                                crit=thresholds['global'][value]['critical']
-
+                if 'custom' in thresholds:
+                    myItem = search_item(thresholds['custom'], domain['name'], "name")
+                    if myItem is not None:
+                        if value in myItem:
+                            warn=myItem[value][0]
+                            crit=myItem[value][1]
+                if warn is None and crit is None:
+                    if "global" in thresholds:
+                        if value in thresholds['global'] and domain[value] != "Unlimited":
+                            warn=thresholds['global'][value][0]
+                            crit=thresholds['global'][value][1]
                 if warn != None and crit != None:
                     if int(warn) > percentvalue and int(crit) < percentvalue:
                         message +="\n--> Warning: Domain " + str(domain['name']) + " has reached threshold for " + value + ": " + str(percentvalue)
                         exitcode = 1
                     elif int(crit) > percentvalue:
-                        message+="\n--> Critical: Domain " + str(domain['name']) +" has reached threshold for " + value + ": " + str(percentvalue)
+                        message+="\n--> Critical: Domain " + str(domain['name']) + " has reached threshold for " + value + ": " + str(percentvalue)
                         exitcode = 2
-                performancedata.append((domain['name'] + "+usage" + "!" + value, percentvalue, '', '', ''))
-                performancedata.append((domain['name'] + "+total" + "!" + value, domain[value + 'total'], '', '', ''))
+                performancedata.append((domain['name'] + "-usage" + ":" + value, percentvalue, '', '', ''))
+                performancedata.append((domain['name'] + "-total" + ":" + value, domain[value + 'total'], '', '', ''))
             else:
                 if domain[value + 'total'] != "Unlimited":
-                    performancedata.append((domain['name'] + "+total" + "!" + value,domain[value + 'total'], '', '', ''))
+                    performancedata.append((domain['name'] + "-total" + ":" + value,domain[value + 'total'], '', '', ''))
                 else:
-                    performancedata.append((domain['name'] + "+total" + "!" + value, -1, '', '', ''))
-                performancedata.append((domain['name'] + "+usage" + "!" + value, -1, '', '', ''))
+                    performancedata.append((domain['name'] + "-total" + ":" + value, -1, '', '', ''))
+                performancedata.append((domain['name'] + "-usage" + ":" + value, -1, '', '', ''))
 
-    message += "</pre>\n"
+    #message += "</pre>\n"
     return exitcode,message,performancedata
 
 def check_hvstatus(resource=None,thresholds={}):
 
-    message="See long output: \n<pre>\n"
+    message="See long output: \n"
     exitcode=0
     shutdownhosts={}
     disabledhosts={}
@@ -282,56 +289,58 @@ def check_hvstatus(resource=None,thresholds={}):
 
     #Add Performance data
     for entry in shutdownhosts.keys():
-        performancedata.append((entry+"!Not_running", shutdownhosts[entry], '', '', ''))
+        performancedata.append((entry+"-Not_running", shutdownhosts[entry], '', '', ''))
     for entry in disabledhosts.keys():
-        performancedata.append((entry+"!Not_enabled", disabledhosts[entry], '', '', ''))
+        performancedata.append((entry+"-Not_enabled", disabledhosts[entry], '', '', ''))
 
-    message += "</pre>\n"
+    #message += "</pre>\n"
     return exitcode,message,performancedata
 
-def check_offerings(resource=None,thresholds={}):
+def check_offerings(resource=None,thresholds=[]):
 
-    offerings = resource['offerings']
-    clusters = resource['cluster']
-    offeringdict={}
+    offerings = resource[0]
+    clusters = resource[1]
+    offeringdict = {}
     errors=""
     performancedata=[]
-    message="See long output: \n<pre>"
+    exitcode = 0
+    message="See long output: \n"
 
     for cluster in clusters:
         clustername = cluster[0]
         hvstatus=cluster[1]
-        for offering in sort_objects(offerings['serviceoffering'], "cpunumber", "memory"):
+        for offering in sort_objects(offerings, "cpunumber", "memory"):
             if offering['iscustomized'] is False:
                 #Simulate offering deployment
                 (temphvstatus, tempdistribution, tempmem, tempcpu)=deploy_offerings(offering, hvstatus)
                 if offering['name'] not in offeringdict:
                     offeringdict[offering['name']]=0
-                offeringdict[offering['name']]+=tempdistribution[offering['name']]
+                offeringdict[offering['name']] += int(tempdistribution[offering['name']])
 
         header = "\n!  Offering! Count!\n"
         for offering in sorted(offeringdict.keys()):
-            if offering in thresholds:
-                warn = thresholds[offering]['warn']
-                critical = thresholds[offering]['critical']
-                if offeringdict[offering] >= warn and offeringdict[offering] <= critical:
-                    errors+="--> Warn: Offering: " + offering + " has broke threshold:" + warn + " with "+ str(offeringdict[offering]) + "\n"
+            myItem = search_item(thresholds, offering, "name")
+            if myItem is not None:
+                warn = myItem['count'][0]
+                critical = myItem['count'][1]
+                if offeringdict[offering] <= warn and offeringdict[offering] >= critical:
+                    errors+="--> Warn: Offering: " + str(offering) + " has broke threshold:" + str(warn) + " with "+ str(offeringdict[offering]) + "\n"
                     if exitcode < 2:
                         exitcode = 1
                 elif offeringdict[offering] <= critical:
-                    errors += "--> Critical: Offering: " + offering + " has broke threshold:" + critical + " with " + str(offeringdict[offering]) + "\n"
+                    errors += "--> Critical: Offering: " + str(offering) + " has broke threshold:" + str(critical) + " with " + str(offeringdict[offering]) + "\n"
                     exitcode = 2
             if offeringdict[offering] == 0:
                 errors += "--> Critical: Offering: " + offering + " can not be deployed anymore\n"
                 exitcode=1
             header+="!{:10}!{:6}!\n".format(offering,offeringdict[offering])
-            performancedata.append((clustername+"!"+offering +"-count",offeringdict[offering], '', '', ''))
+            performancedata.append((clustername+"-"+offering +"-count",offeringdict[offering], '', '', ''))
 
         message+="\nStatistics for Cluster: " + clustername + "\n"
         message+=header
         message+="\n"+errors
 
-    message+="</pre>\n"
+    #message+="</pre>\n"
     return exitcode,message,performancedata
 
 
@@ -339,6 +348,13 @@ def check_offerings(resource=None,thresholds={}):
 ########################################################################################################
 ##############                          Helper Functions                                  ##############
 ########################################################################################################
+
+def search_item(array, item, searchfield):
+    if array is not None:
+        for myItem in array:
+            if myItem[searchfield] == item:
+                return myItem
+    return None
 
 def sort_objects(array,cpuvalue,memvalue):
 

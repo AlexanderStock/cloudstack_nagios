@@ -1,0 +1,24 @@
+title: Cloudstack domains
+agents: linux
+catalog: cloud/cloudstack
+distribution: https://github.com/AlexanderStock/cloudstack_nagios
+author: Alexander Stock <mail@stock-alexander.de>
+license: GPL
+description:
+    This check is for monitoring the resource consumption of a cloudstack domain
+    in your cloud environment managed by cloudstack.
+
+    Metrics you will receive from cloudstack are:
+    'vm'
+    'memory'
+    'network'
+    'snapshot'
+    'volume'
+    'ip'
+    'vpc'
+    'template'
+    'primarystorage'
+    'secondarystorage'
+
+inventory:
+  For each domain a check in check_mk will be created.

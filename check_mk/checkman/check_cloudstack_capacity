@@ -1,7 +1,7 @@
 title: Cloudstack capacity
 agents: linux
 catalog: cloud/cloudstack
-distribution: https://github.com/kriegerse/check_mk-mounts_layout
+distribution: https://github.com/AlexanderStock/cloudstack_nagios
 author: Alexander Stock <mail@stock-alexander.de>
 license: GPL
 description:
