@@ -1,0 +1,23 @@
+import json
+
+def inventory_cloudstack_domains(info):
+    data = json.loads(str(info[0][0]))
+    for line in data:
+        yield line['name'], None
+
+def check_cloudstack_domains(item, params, info):
+    data = json.loads(str(info[0][0]))
+    thresholds={}
+    for metric in data:
+        if metric['name'] == item:
+            return check_domains(resource=[metric],thresholds=params)
+
+
+check_info["check_cloudstack_domains"] = {
+    'check_function':            check_cloudstack_domains,
+    'inventory_function':        inventory_cloudstack_domains,
+    'service_description':       'CloudStack Capacity for domain %s',
+    'has_perfdata':              True,
+    'group':                     'check_cloudstack_domains',
+    'includes':                  ['cschecks.include'],
+}

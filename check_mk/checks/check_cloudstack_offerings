@@ -1,0 +1,50 @@
+import re
+import json
+
+def inventory_cloudstack_offerings(info):
+    foundOffering = False
+    for line in info:
+        if foundOffering == True:
+            data = json.loads(line[0])
+            for offering in data:
+                yield offering["name"], None
+        foundOffering = False
+        if re.search("<offerings>",line[0]) is not None:
+            foundOffering = True
+
+
+def check_cloudstack_offerings(item, params, info):
+    myOffering = []
+    myCluster = []
+    foundOffering = False
+    foundCluster = False
+    for line in info:
+        #Search for offering tag
+        if re.search("<offerings>",line[0]) is not None:
+            foundOffering = True
+            foundCluster = False
+            continue
+        #Search for cluster tag
+        if re.search("<cluster>", line[0]) is not None:
+            foundCluster = True
+            foundOffering = False
+            continue
+        #Find offering in Data
+        if foundOffering == True:
+            for offering in json.loads(line[0]):
+                if item == offering["name"]:
+                    myOffering = offering
+        if foundCluster == True:
+            myCluster = json.loads(line[0])
+
+    metric=[[myOffering],myCluster]
+    return check_offerings(resource=metric,thresholds=params)
+
+check_info["check_cloudstack_offerings"] = {
+    'check_function':            check_cloudstack_offerings,
+    'inventory_function':        inventory_cloudstack_offerings,
+    'service_description':       'CloudStack Count for offering %s',
+    'has_perfdata':              True,
+    'group':                    'check_cloudstack_offerings',
+    'includes':                 ['cschecks.include'],
+}

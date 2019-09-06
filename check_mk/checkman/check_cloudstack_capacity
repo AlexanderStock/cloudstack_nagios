@@ -1,0 +1,24 @@
+title: Cloudstack capacity
+agents: linux
+catalog: cloud/cloudstack
+distribution: https://github.com/AlexanderStock/cloudstack_nagios
+author: Alexander Stock <mail@stock-alexander.de>
+license: GPL
+description:
+    This check is for monitoring the overall resource consumption
+    in your cloud environment managed by cloudstack.
+
+    Metrics you will receive from cloudstack are:
+    'CAPACITY_TYPE_MEMORY',
+    'CAPACITY_TYPE_CPU',
+    'CAPACITY_TYPE_STORAGE',
+    'CAPACITY_TYPE_STORAGE_ALLOCATED',
+    'CAPACITY_TYPE_VIRTUAL_NETWORK_PUBLIC_IP',
+    'CAPACITY_TYPE_PRIVATE_IP',
+    'CAPACITY_TYPE_SECONDARY_STORAGE',
+    'CAPACITY_TYPE_VLAN',
+    'CAPACITY_TYPE_DIRECT_ATTACHED_PUBLIC_IP',
+    'CAPACITY_TYPE_LOCAL_STORAGE',
+
+inventory:
+  For each global capacity metric a check in check_mk will be created.

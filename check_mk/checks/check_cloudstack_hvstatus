@@ -1,0 +1,20 @@
+import json
+
+def inventory_cloudstack_hvstatus(info):
+    data = json.loads(str(info[0][0]))
+    yield "", None
+
+def check_cloudstack_hvstatus(item, params, info):
+    data = json.loads(str(info[0][0]))
+    thresholds={}
+    return check_hvstatus(resource=data,thresholds=thresholds)
+
+
+check_info["check_cloudstack_hvstatus"] = {
+    'check_function':            check_cloudstack_hvstatus,
+    'inventory_function':        inventory_cloudstack_hvstatus,
+    'service_description':       'CloudStack HV Status',
+    'has_perfdata':              True,
+    'group':                     'check_cloudstack_hvstatus',
+    'includes':                  ['cschecks.include'],
+}
